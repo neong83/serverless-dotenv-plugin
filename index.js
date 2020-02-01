@@ -1,84 +1,90 @@
-'use strict'
+"use strict";
 
-const dotenv = require('dotenv')
-const dotenvExpand = require('dotenv-expand')
-const chalk = require('chalk')
-const fs = require('fs')
+const dotenv = require("dotenv");
+const dotenvExpand = require("dotenv-expand");
+const chalk = require("chalk");
+const fs = require("fs");
 
 class ServerlessPlugin {
   constructor(serverless, options) {
-    this.serverless = serverless
+    this.serverless = serverless;
     this.serverless.service.provider.environment =
-      this.serverless.service.provider.environment || {}
-    this.config =
-      this.serverless.service.custom && this.serverless.service.custom['dotenv']
+      this.serverless.service.provider.environment || {};
 
-    this.loadEnv(this.getEnvironment(options))
+    this.config =
+      this.serverless.service.custom &&
+      this.serverless.service.custom["dotenv"];
+    this.config_dotenv_base_path = this.serverless.service.provider.environment[
+      "DOTENV_BASE_PATH"
+    ];
+
+    this.loadEnv(this.getEnvironment(options));
   }
 
   getEnvironment(options) {
     if (process.env.NODE_ENV) {
-      return process.env.NODE_ENV
+      return process.env.NODE_ENV;
     }
 
     if (options.env) {
-      return options.env
+      return options.env;
     }
 
-    return 'development'
+    return "dev";
   }
 
   resolveEnvFileName(env) {
     if (this.config && this.config.path) {
-      return this.config.path
+      return this.config.path;
     }
 
-    let basePath =
-      this.config && this.config.basePath ? this.config.basePath : ''
+    let config_basePath =
+      this.config && this.config.basePath ? this.config.basePath : "";
+    let basePath = config_basePath || this.config_dotenv_base_path;
 
-    let defaultPath = basePath + '.env'
-    let path = basePath + '.env.' + env
+    let defaultPath = basePath + ".env";
+    let path = basePath + ".env." + env;
 
-    return fs.existsSync(path) ? path : defaultPath
+    return fs.existsSync(path) ? path : defaultPath;
   }
 
   loadEnv(env) {
-    var envFileName = this.resolveEnvFileName(env)
+    var envFileName = this.resolveEnvFileName(env);
     try {
-      let envVars = dotenvExpand(dotenv.config({ path: envFileName })).parsed
+      let envVars = dotenvExpand(dotenv.config({ path: envFileName })).parsed;
 
-      var include = false
+      var include = false;
       if (this.config && this.config.include) {
-        include = this.config.include
+        include = this.config.include;
       }
 
       if (envVars) {
         this.serverless.cli.log(
-          'DOTENV: Loading environment variables from ' + envFileName + ':'
-        )
+          "DOTENV: Loading environment variables from " + envFileName + ":"
+        );
         if (include) {
           Object.keys(envVars)
             .filter(key => !include.includes(key))
             .forEach(key => {
-              delete envVars[key]
-            })
+              delete envVars[key];
+            });
         }
         Object.keys(envVars).forEach(key => {
-          this.serverless.cli.log('\t - ' + key)
-          this.serverless.service.provider.environment[key] = envVars[key]
-        })
+          this.serverless.cli.log("\t - " + key);
+          this.serverless.service.provider.environment[key] = envVars[key];
+        });
       } else {
-        this.serverless.cli.log('DOTENV: Could not find .env file.')
+        this.serverless.cli.log("DOTENV: Could not find .env file.");
       }
     } catch (e) {
       console.error(
         chalk.red(
-          '\n Serverless Plugin Error --------------------------------------\n'
+          "\n Serverless Plugin Error --------------------------------------\n"
         )
-      )
-      console.error(chalk.red('  ' + e.message))
+      );
+      console.error(chalk.red("  " + e.message));
     }
   }
 }
 
-module.exports = ServerlessPlugin
+module.exports = ServerlessPlugin;
