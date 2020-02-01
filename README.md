@@ -1,10 +1,13 @@
 # serverless-dotenv-plugin [![npm version](https://img.shields.io/npm/v/serverless-dotenv-plugin.svg?style=flat)](https://www.npmjs.com/package/serverless-dotenv-plugin)
 
-[![Donate](https://infrontlabs.com/Donate.612b038d.png)](https://www.paypal.me/ColynBrown?locale.x=en_US)
-
 Preload Environment Variables Into Serverless
 
 Use this plugin if you have variables stored in a `.env` file that you want loaded into your serverless yaml config. This will allow you to reference them as `${env:VAR_NAME}` inside your config _and_ it will load them into your lambdas.
+
+### Note
+
+This is a Fork of the main project
+Due to the incomparable feature/setup I had at work, some change to this package is necessary
 
 ### Install and Setup
 
@@ -43,11 +46,11 @@ By default, the plugin looks for the file: `.env`. In most use cases this is all
 
 When you deploy with `NODE_ENV` set: `NODE_ENV=production sls deploy` the plugin will look for a file named `.env.production`. If it doesn't exist it will default to `.env`. If for some reason you can't set NODE_ENV, you could always just pass it in as an option: `sls deploy --env production`. If `NODE_ENV` or `--env` is not set, it will default to `development`.
 
-| Valid .env file names | Description                                                                                         |
-| --------------------- | --------------------------------------------------------------------------------------------------- |
-| .env                  | Default file name when no other files are specified or found.                                       |
-| .env.development      | If NODE_ENV or --env **is not set**, will try to load `.env.development`. If not found, load `.env` |
-| .env.{ENV}            | If NODE_ENV or --env **is set**, will try to load `.env.{env}`. If not found, load `.env`           |
+| Valid .env file names  | Description                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------------- |
+| .env                   | Default file name when no other files are specified or found.                               |
+| **_.env.dev *(NEW)*_** | If NODE_ENV or --env **is not set**, will try to load `.env.dev`. If not found, load `.env` |
+| .env.{ENV}             | If NODE_ENV or --env **is set**, will try to load `.env.{env}`. If not found, load `.env`   |
 
 ### Plugin options
 
@@ -73,6 +76,24 @@ custom:
     include:
       - AUTH0_CLIENT_ID
       - AUTH0_CLIENT_SECRET
+```
+
+### ENV options
+
+#### Main reason for this update
+
+_I / We declear the custom section in `serverless.yml` in a seperate file (like `custom: ${file(serverless/custom.yml)}`). This caused a chicken and egg problem for this plugin, which the `basePath` setting won't ever be loaded until `serverless.yml` file had converted._
+
+> DOTENV_BASE_PATH: path/to/
+
+This will use as a fallback option if it was NOT able to locate `dotenv` from `custom`
+
+Complete example:
+
+```
+provider:
+  environment:
+    DOTENV_BASE_PATH: path/to/
 ```
 
 ### Usage
